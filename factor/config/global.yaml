@@ -1,0 +1,178 @@
+# 全局配置文件 - 统一精度、格式、常量等设置
+
+# 数值精度设置
+precision:
+  # 价格精度 (小数点后位数)
+  price: 6
+  
+  # 百分比精度 (如收益率)
+  percentage: 4
+  
+  # 指标精度 (如RSI, MACD等)
+  indicator: 4
+  
+  # 统计量精度 (如标准差、相关系数)
+  statistics: 6
+  
+  # 默认精度
+  default: 6
+
+# 输出格式设置
+output_format:
+  # CSV文件编码
+  csv_encoding: "utf-8"
+  
+  # CSV分隔符
+  csv_separator: ","
+  
+  # 日期格式
+  date_format: "%Y%m%d"
+  
+  # 时间戳格式
+  timestamp_format: "%Y-%m-%d %H:%M:%S"
+  
+  # 是否包含索引
+  include_index: false
+  
+  # 空值填充方式
+  na_representation: ""
+
+# 数据类型设置
+data_types:
+  # 价格列的数据类型
+  price_columns: "float64"
+  
+  # 成交量列的数据类型  
+  volume_columns: "float64"
+  
+  # 日期列的数据类型
+  date_columns: "datetime64[ns]"
+  
+  # 代码列的数据类型
+  code_columns: "string"
+
+# 计算参数设置
+calculation:
+  # 最小有效数据点数
+  min_periods: 1
+  
+  # 是否跳过NA值
+  skipna: true
+  
+  # 向量化计算批大小
+  vectorize_batch_size: 1000
+  
+  # 内存使用阈值 (MB)
+  memory_threshold: 500
+
+# 缓存设置
+cache_settings:
+  # 缓存键长度
+  cache_key_length: 16
+  
+  # 缓存压缩
+  compression: true
+  
+  # 缓存版本 (用于失效处理)
+  version: "1.0"
+
+# 性能设置
+performance:
+  # 并行处理
+  enable_parallel: false
+  
+  # 进度显示
+  show_progress: true
+  
+  # 内存优化
+  memory_optimize: true
+  
+  # 警告级别
+  warning_level: "default"
+
+# 文件命名规范
+naming_convention:
+  # 因子文件命名模板
+  factor_file_template: "{factor_name}_{symbol}.csv"
+  
+  # 分组文件命名模板
+  group_file_template: "{group_name}_{symbol}.csv"
+  
+  # 完整数据文件命名模板
+  complete_file_template: "all_factors_{symbol}.csv"
+  
+  # 缓存文件命名
+  cache_file: "factor_cache.pkl"
+  metadata_file: "metadata.json"
+
+# 数据验证规则
+validation:
+  # 价格数据范围检查
+  price_range:
+    min: 0.001
+    max: 10000.0
+  
+  # 成交量范围检查
+  volume_range:
+    min: 0
+    max: 1e10
+  
+  # 百分比数据范围 (-100% to 1000%)
+  percentage_range:
+    min: -1.0
+    max: 10.0
+  
+  # 缺失值容忍度 (最大缺失比例)
+  max_missing_ratio: 0.1
+
+# ETF基础信息
+etf_info:
+  symbol: "510580.SH"
+  name: "中证500ETF易方达"
+  exchange: "SH"
+  base_currency: "CNY"
+  trading_hours:
+    start: "09:30"
+    end: "15:00"
+    lunch_break:
+      start: "11:30"
+      end: "13:00"
+
+# 日志设置
+logging:
+  # 日志级别
+  level: "INFO"
+  
+  # 日志格式
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  # 是否显示进度
+  show_progress: true
+  
+  # 是否保存日志文件
+  save_to_file: false
+
+# 国际化设置
+localization:
+  # 语言
+  language: "zh_CN"
+  
+  # 时区
+  timezone: "Asia/Shanghai"
+  
+  # 小数点符号
+  decimal_separator: "."
+  
+  # 千位分隔符
+  thousands_separator: ","
+
+# 环境设置
+environment:
+  # 开发/生产环境
+  mode: "development"
+  
+  # 调试模式
+  debug: true
+  
+  # 测试模式
+  testing: false

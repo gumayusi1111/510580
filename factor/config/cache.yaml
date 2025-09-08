@@ -1,0 +1,53 @@
+# 缓存配置文件
+
+# 缓存设置
+cache:
+  # 缓存类型: memory, disk, both
+  type: "both"
+  
+  # 缓存目录
+  directory: "factor_data/cache"
+  
+  # 内存缓存限制 (MB)
+  memory_limit_mb: 500
+  
+  # 自动保存间隔 (秒)
+  auto_save_interval: 300
+  
+  # 缓存过期时间 (小时)
+  expiry_hours: 24
+
+# 增量更新设置
+incremental:
+  # 是否启用增量更新
+  enabled: true
+  
+  # 检查新数据的时间间隔 (分钟)
+  check_interval_minutes: 60
+  
+  # 增量更新的最小行数
+  min_new_rows: 1
+
+# 性能优化
+performance:
+  # 是否使用并行计算
+  parallel_computing: false
+  
+  # 批量处理大小
+  batch_size: 1000
+  
+  # 内存使用监控
+  memory_monitoring: true
+
+# 文件设置
+files:
+  cache_file: "factor_cache.pkl"
+  metadata_file: "metadata.json"
+  
+  # 文件压缩
+  compression: true
+  
+  # 备份设置
+  backup:
+    enabled: true
+    max_backups: 3

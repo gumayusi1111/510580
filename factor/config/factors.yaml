@@ -1,0 +1,102 @@
+# 因子配置文件
+# 每个因子的默认参数配置
+
+# 移动均线类
+moving_average:
+  SMA:
+    periods: [5, 10, 20, 60]
+    data_type: "hfq"
+  EMA:
+    periods: [5, 10, 20, 60]
+    data_type: "hfq"
+  WMA:
+    periods: [5, 10, 20, 60]
+    data_type: "hfq"
+  MA_DIFF:
+    short_periods: [5, 10]
+    long_periods: [20, 60]
+    data_type: "hfq"
+  MA_SLOPE:
+    periods: [5, 10, 20]
+    data_type: "hfq"
+
+# 趋势动量类  
+trend_momentum:
+  MACD:
+    fast: 12
+    slow: 26
+    signal: 9
+    data_type: "hfq"
+  RSI:
+    periods: [6, 14, 24]
+    data_type: "hfq"
+  ROC:
+    periods: [5, 10, 20]
+    data_type: "hfq"
+  MOM:
+    periods: [5, 10, 20]
+    data_type: "hfq"
+
+# 波动率类
+volatility:
+  ATR:
+    period: 14
+    data_type: "hfq"
+  ATR_PCT:
+    period: 14
+    data_type: "hfq"
+  HV:
+    periods: [20, 60]
+    data_type: "hfq"
+  BOLL:
+    period: 20
+    std_dev: 2.0
+    data_type: "hfq"
+  DC:
+    period: 20
+    data_type: "hfq"
+  BB_WIDTH:
+    period: 20
+    std_dev: 2.0
+    data_type: "hfq"
+  STOCH:
+    k_period: 9
+    d_period: 3
+    data_type: "hfq"
+
+# 量价关系类
+volume_price:
+  VMA:
+    periods: [5, 10, 20]
+    data_type: "raw"
+  VOLUME_RATIO:
+    period: 5
+    data_type: "raw"
+  OBV:
+    data_type: "hfq"
+  KDJ:
+    period: 9
+    data_type: "hfq"
+  CCI:
+    period: 14
+    data_type: "hfq"
+  WR:
+    period: 14
+    data_type: "hfq"
+  MFI:
+    period: 14
+    data_type: "hfq"
+
+# 收益风险类
+return_risk:
+  DAILY_RETURN:
+    data_type: "hfq"
+  CUM_RETURN:
+    periods: [5, 20, 60]
+    data_type: "hfq"
+  ANNUAL_VOL:
+    periods: [20, 60]
+    data_type: "hfq"
+  MAX_DD:
+    periods: [20, 60]
+    data_type: "hfq"

@@ -1,0 +1,63 @@
+# 数据配置文件
+
+# 数据源配置
+data_sources:
+  basic_data: "../data/510580_SH_basic_data.csv"
+  raw_data: "../data/510580_SH_raw_data.csv"
+  hfq_data: "../data/510580_SH_hfq_data.csv"
+  qfq_data: "../data/510580_SH_qfq_data.csv"
+
+# 数据列映射
+data_columns:
+  basic:
+    - ts_code
+    - trade_date
+    - open
+    - high
+    - low
+    - close
+    - vol
+    - amount
+    - adj_factor
+    
+  hfq:
+    - ts_code
+    - trade_date
+    - hfq_open
+    - hfq_high
+    - hfq_low
+    - hfq_close
+    - vol
+    - amount
+    
+  qfq:
+    - ts_code
+    - trade_date
+    - qfq_open
+    - qfq_high
+    - qfq_low
+    - qfq_close
+    - vol
+    - amount
+    
+  raw:
+    - ts_code
+    - trade_date
+    - open
+    - high
+    - low
+    - close
+    - vol
+    - amount
+
+# 数据质量检查
+data_validation:
+  required_columns: ["ts_code", "trade_date"]
+  date_format: "%Y%m%d"
+  min_rows: 100
+  
+# ETF信息
+etf_info:
+  symbol: "510580.SH"
+  name: "中证500ETF易方达"
+  start_date: "2018-09-10"

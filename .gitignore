@@ -1,0 +1,76 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Data files - 不上传原始数据
+data/
+*.csv
+*.h5
+*.parquet
+*.pickle
+*.pkl
+
+# Factor output data - 不上传计算结果
+factor_data/
+*/factor_data/
+**/factor_data/
+
+# Cache files - 不上传缓存
+**/cache/
+*.cache
+
+# Data files with sensitive tokens
+*token*
+*.key
+*.secret
+*.env
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# Temporary files
+*.tmp
+*.log
+*.bak
