@@ -14,7 +14,7 @@ import hashlib
 class DataLoader:
     """数据加载和预处理器"""
     
-    def __init__(self, data_dir: str = "../data"):
+    def __init__(self, data_dir: str = "../data_collection/data/510580"):
         """
         初始化数据加载器
         Args:
@@ -23,10 +23,10 @@ class DataLoader:
         self.data_dir = data_dir
         self.data_cache = {}
         self.data_files = {
-            "basic": "510580_SH_basic_data.csv",
-            "raw": "510580_SH_raw_data.csv", 
-            "hfq": "510580_SH_hfq_data.csv",
-            "qfq": "510580_SH_qfq_data.csv"
+            "basic": "basic_data.csv",
+            "raw": "raw_data.csv", 
+            "hfq": "hfq_data.csv",
+            "qfq": "qfq_data.csv"
         }
         
     def load_data(self, data_type: str = "hfq") -> pd.DataFrame:

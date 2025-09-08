@@ -17,7 +17,7 @@ from .base_factor import BaseFactor
 class VectorizedEngine:
     """向量化因子计算引擎"""
     
-    def __init__(self, data_dir: str = "../data", output_dir: str = "factor_data"):
+    def __init__(self, data_dir: str = "../data_collection/data/510580", output_dir: str = "factor_data"):
         """
         初始化引擎
         Args:
@@ -25,7 +25,9 @@ class VectorizedEngine:
             output_dir: 输出目录
         """
         self.data_loader = DataLoader(data_dir)
-        self.data_writer = DataWriter(output_dir)
+        # 从data_dir推断ETF代码 (如：../data_collection/data/510580 -> 510580)
+        etf_code = os.path.basename(data_dir) if os.path.basename(data_dir).isdigit() else "510580"
+        self.data_writer = DataWriter(output_dir, etf_code)
         self.cache = CacheManager(f"{output_dir}/cache")
         self.factors = {}  # 注册的因子实例
         

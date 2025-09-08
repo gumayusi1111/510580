@@ -14,26 +14,34 @@ from .config import config
 class DataWriter:
     """数据输出管理器"""
     
-    def __init__(self, output_dir: str = "factor_data"):
+    def __init__(self, output_dir: str = "factor_data", etf_code: str = "510580.SH"):
         """
         初始化数据输出器
         Args:
             output_dir: 输出目录路径
+            etf_code: ETF代码，支持 510580.SH 或 510580 格式
         """
         self.output_dir = output_dir
-        self.symbol = "510580_SH"  # ETF代码
+        # 标准化ETF代码 - 只保留数字部分
+        self.etf_code = etf_code.split('.')[0] if '.' in etf_code else etf_code
+        self.symbol = f"{self.etf_code}.SH"  # 保留完整格式用于兼容
         self.ensure_directories()
         
     def ensure_directories(self):
-        """创建输出目录结构"""
-        dirs = ["single_factors", "factor_groups", "complete", "cache"]
-        for dir_name in dirs:
-            path = os.path.join(self.output_dir, dir_name)
-            os.makedirs(path, exist_ok=True)
+        """创建新的清晰目录结构"""
+        # 创建ETF专用目录
+        etf_dir = os.path.join(self.output_dir, self.etf_code)
+        os.makedirs(etf_dir, exist_ok=True)
+        
+        # 创建缓存目录
+        cache_dir = os.path.join(self.output_dir, "cache")
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        print(f"📁 创建因子数据目录: {etf_dir}")
             
     def save_single_factor(self, factor_name: str, data: pd.DataFrame) -> str:
         """
-        保存单个因子到文件
+        保存单个因子到新的清晰结构
         Args:
             factor_name: 因子名称
             data: 因子数据
@@ -44,9 +52,9 @@ class DataWriter:
         if not all(col in data.columns for col in ['ts_code', 'trade_date']):
             raise ValueError("数据必须包含 ts_code 和 trade_date 列")
             
-        # 生成文件路径
-        filename = f"{factor_name}_{self.symbol}.csv"
-        file_path = os.path.join(self.output_dir, "single_factors", filename)
+        # 生成清晰的文件路径：factor_data/510580/SMA.csv
+        filename = f"{factor_name}.csv"
+        file_path = os.path.join(self.output_dir, self.etf_code, filename)
         
         # 整理数据格式
         output_data = self._format_output_data(data)
@@ -54,7 +62,7 @@ class DataWriter:
         # 保存文件
         output_data.to_csv(file_path, index=False)
         
-        print(f"✅ 保存单因子: {file_path}")
+        print(f"✅ 保存因子 {factor_name}: {file_path}")
         return file_path
     
     def save_factor_group(self, group_name: str, factors_data: Dict[str, pd.DataFrame]) -> str:

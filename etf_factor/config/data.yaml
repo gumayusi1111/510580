@@ -1,11 +1,11 @@
 # 数据配置文件
 
-# 数据源配置
+# 数据源配置 - 适配新的data_collection结构
 data_sources:
-  basic_data: "../data/510580_SH_basic_data.csv"
-  raw_data: "../data/510580_SH_raw_data.csv"
-  hfq_data: "../data/510580_SH_hfq_data.csv"
-  qfq_data: "../data/510580_SH_qfq_data.csv"
+  basic_data: "../data_collection/data/510580/basic_data.csv"
+  raw_data: "../data_collection/data/510580/raw_data.csv"
+  hfq_data: "../data_collection/data/510580/hfq_data.csv"
+  qfq_data: "../data_collection/data/510580/qfq_data.csv"
 
 # 数据列映射
 data_columns:
