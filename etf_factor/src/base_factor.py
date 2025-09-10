@@ -46,9 +46,23 @@ class BaseFactor(ABC):
     
     def get_cache_key(self, data_hash: str) -> str:
         """生成缓存键"""
-        param_str = str(sorted(self.params.items()))
-        combined = f"{self.name}_{data_hash}_{param_str}"
-        return hashlib.md5(combined.encode()).hexdigest()[:16]
+        try:
+            # 安全地处理参数，避免unhashable类型
+            safe_params = {}
+            for k, v in self.params.items():
+                if isinstance(v, (list, tuple)):
+                    safe_params[k] = str(v)
+                elif hasattr(v, 'to_dict'):  # DataFrame等
+                    safe_params[k] = f"<{type(v).__name__}>"
+                else:
+                    safe_params[k] = str(v)
+            
+            param_str = str(sorted(safe_params.items()))
+            combined = f"{self.name}_{data_hash}_{param_str}"
+            return hashlib.md5(combined.encode()).hexdigest()[:16]
+        except Exception:
+            # 如果还是有问题，使用简化的缓存键
+            return hashlib.md5(f"{self.name}_{data_hash}".encode()).hexdigest()[:16]
     
     def validate_data(self, data: pd.DataFrame) -> bool:
         """验证输入数据"""

@@ -115,12 +115,12 @@ validation:
   # 成交量范围检查
   volume_range:
     min: 0
-    max: 1e10
+    max: 10000000000.0
   
-  # 百分比数据范围 (-100% to 1000%)
+  # 百分比数据范围 (-80% to 300% - 基于行业标准和A股市场特性)
   percentage_range:
-    min: -1.0
-    max: 10.0
+    min: -80.0
+    max: 300.0
   
   # 缺失值容忍度 (最大缺失比例)
   max_missing_ratio: 0.1

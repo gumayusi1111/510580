@@ -54,11 +54,18 @@ class CUM_RETURN(BaseFactor):
         for period in self.params["periods"]:
             column_name = f'CUM_RETURN_{period}'
             
-            # 获取N日前的价格
-            prev_close = close.shift(period)
+            # 修复逻辑：正确处理历史数据
+            # 前period行应该为NaN，因为没有足够的历史数据
+            cum_return = pd.Series(index=close.index, dtype=float)
             
-            # 计算累计收益率
-            cum_return = ((close - prev_close) / prev_close) * 100
+            # 从第period行开始计算（有足够历史数据的位置）
+            for i in range(period, len(close)):
+                current_price = close.iloc[i]
+                prev_price = close.iloc[i - period]  # period天前的价格
+                if pd.notna(current_price) and pd.notna(prev_price) and prev_price != 0:
+                    cum_return.iloc[i] = ((current_price - prev_price) / prev_price) * 100
+                else:
+                    cum_return.iloc[i] = pd.NA
             
             # 应用精度配置
             cum_return = cum_return.round(config.get_precision('percentage'))

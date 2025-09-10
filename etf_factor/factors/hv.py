@@ -56,11 +56,22 @@ class HV(BaseFactor):
         for period in self.params["periods"]:
             column_name = f'HV_{period}'
             
-            # 计算收益率的标准差
-            vol = returns.rolling(window=period, min_periods=1).std()
+            # 修复逻辑：正确处理历史数据
+            # 前period行应该为NaN，因为没有足够的历史数据
+            hv_values = pd.Series(index=returns.index, dtype=float)
             
-            # 年化波动率 (252个交易日)
-            hv_values = vol * np.sqrt(252) * 100  # 转换为百分比
+            # 从第period行开始计算（有足够历史数据的位置）
+            for i in range(period, len(returns)):
+                period_returns = returns.iloc[i-period+1:i+1]  # 取period个收益率
+                if len(period_returns.dropna()) >= period:
+                    vol_std = period_returns.std()
+                    if pd.notna(vol_std):
+                        # 年化波动率 (252个交易日)
+                        hv_values.iloc[i] = vol_std * np.sqrt(252)
+                    else:
+                        hv_values.iloc[i] = pd.NA
+                else:
+                    hv_values.iloc[i] = pd.NA
             
             hv_values = hv_values.round(config.get_precision('percentage'))
             result[column_name] = hv_values

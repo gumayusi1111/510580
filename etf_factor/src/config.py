@@ -182,10 +182,13 @@ class GlobalConfig:
         
         validated_data = data.copy()
         
+        # 只对非NaN值进行范围验证，避免TypeError
         if min_val is not None:
-            validated_data[validated_data < min_val] = pd.NA
+            mask = validated_data.notna() & (validated_data < min_val)
+            validated_data[mask] = pd.NA
         if max_val is not None:
-            validated_data[validated_data > max_val] = pd.NA
+            mask = validated_data.notna() & (validated_data > max_val)
+            validated_data[mask] = pd.NA
             
         return validated_data
     

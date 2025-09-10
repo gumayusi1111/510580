@@ -56,11 +56,22 @@ class ANNUAL_VOL(BaseFactor):
         for period in self.params["periods"]:
             column_name = f'ANNUAL_VOL_{period}'
             
-            # 计算收益率的滚动标准差
-            vol_std = daily_returns.rolling(window=period, min_periods=1).std()
+            # 修复逻辑：正确处理历史数据
+            # 前period行应该为NaN，因为没有足够的历史数据
+            annual_vol = pd.Series(index=daily_returns.index, dtype=float)
             
-            # 年化并转换为百分比
-            annual_vol = vol_std * np.sqrt(252) * 100
+            # 从第period行开始计算（有足够历史数据的位置）
+            for i in range(period, len(daily_returns)):
+                period_returns = daily_returns.iloc[i-period+1:i+1]  # 取period个收益率
+                if len(period_returns.dropna()) >= period:
+                    vol_std = period_returns.std()
+                    if pd.notna(vol_std):
+                        # 年化波动率 (252个交易日)
+                        annual_vol.iloc[i] = vol_std * np.sqrt(252)
+                    else:
+                        annual_vol.iloc[i] = pd.NA
+                else:
+                    annual_vol.iloc[i] = pd.NA
             
             # 应用精度配置
             annual_vol = annual_vol.round(config.get_precision('percentage'))

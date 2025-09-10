@@ -69,18 +69,18 @@ class MA_SLOPE(BaseFactor):
                 min_periods=1
             ).mean()
             
-            # 计算斜率：(当前MA - N日前MA) / N
-            # 使用shift获取N日前的MA值
-            ma_prev = ma_values.shift(period)
-            slope_values = (ma_values - ma_prev) / period
+            # 修复逻辑：正确计算斜率
+            # 前period行应该为NaN，因为没有足够的历史数据
+            slope_values = pd.Series(index=ma_values.index, dtype=float)
             
-            # 对于前N日，使用可用数据计算斜率
-            for i in range(min(period, len(slope_values))):
-                if pd.isna(slope_values.iloc[i]) and i > 0:
-                    # 使用从第一个MA值到当前MA值的斜率
-                    current_ma = ma_values.iloc[i]
-                    first_ma = ma_values.iloc[0]
-                    slope_values.iloc[i] = (current_ma - first_ma) / (i + 1)
+            # 从第period行开始计算（有足够历史数据的位置）
+            for i in range(period, len(ma_values)):
+                current_ma = ma_values.iloc[i]
+                prev_ma = ma_values.iloc[i - period]  # period天前的MA值
+                if pd.notna(current_ma) and pd.notna(prev_ma):
+                    slope_values.iloc[i] = (current_ma - prev_ma) / period
+                else:
+                    slope_values.iloc[i] = pd.NA
             
             # 应用全局精度配置
             slope_values = slope_values.round(config.get_precision('indicator'))

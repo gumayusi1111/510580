@@ -62,11 +62,18 @@ class MOM(BaseFactor):
         for period in self.params["periods"]:
             column_name = f'MOM_{period}'
             
-            # 获取N日前的价格
-            prev_prices = close_prices.shift(period)
+            # 修复逻辑：正确处理历史数据
+            # 前period行应该为NaN，因为没有足够的历史数据
+            mom_values = pd.Series(index=close_prices.index, dtype=float)
             
-            # 计算动量 (价格差值)
-            mom_values = close_prices - prev_prices
+            # 从第period行开始计算（有足够历史数据的位置）
+            for i in range(period, len(close_prices)):
+                current_price = close_prices.iloc[i]
+                prev_price = close_prices.iloc[i - period]  # period天前的价格
+                if pd.notna(current_price) and pd.notna(prev_price):
+                    mom_values.iloc[i] = current_price - prev_price
+                else:
+                    mom_values.iloc[i] = pd.NA
             
             # 应用全局精度配置
             mom_values = mom_values.round(config.get_precision('price'))
