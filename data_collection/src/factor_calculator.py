@@ -14,10 +14,15 @@ from typing import List, Optional
 class FactorCalculator:
     """因子计算器 - 集成etf_factor系统"""
     
-    def __init__(self, etf_factor_dir="etf_factor"):
+    def __init__(self, etf_factor_dir=None):
         """初始化因子计算器"""
-        self.etf_factor_dir = etf_factor_dir
         self.data_collection_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if etf_factor_dir is None:
+            # 默认使用项目根目录下的etf_factor
+            project_root = os.path.dirname(self.data_collection_dir)
+            self.etf_factor_dir = os.path.join(project_root, "etf_factor")
+        else:
+            self.etf_factor_dir = etf_factor_dir
         
     def should_calculate_factors(self, etf_code: str) -> bool:
         """判断是否需要计算因子"""
@@ -107,17 +112,77 @@ class FactorCalculator:
             # 更新配置中的数据源路径
             self._update_factor_config(etf_code)
             
-            # 使用简化的因子计算执行器
+            # 直接使用etf_factor引擎
             print("📈 执行因子计算...")
             
-            # 导入简化执行器
-            sys.path.append(os.path.join(self.data_collection_dir, 'src'))
-            from simple_factor_runner import run_simple_factor_calculation
+            # 添加etf_factor路径到sys.path
+            if self.etf_factor_dir not in sys.path:
+                sys.path.insert(0, self.etf_factor_dir)
             
-            # 切换到项目根目录
-            os.chdir(os.path.dirname(self.data_collection_dir))
+            # 使用importlib强制导入，避免缓存问题
+            import importlib
+            import importlib.util
             
-            success = run_simple_factor_calculation()
+            # 清除可能的模块缓存
+            engine_module_name = 'src.engine'
+            if engine_module_name in sys.modules:
+                del sys.modules[engine_module_name]
+            
+            try:
+                # 方法1：尝试正常导入
+                from src.engine import VectorizedEngine
+                print("✅ 使用正常导入成功")
+            except ImportError as e:
+                print(f"⚠️  正常导入失败: {e}")
+                try:
+                    # 方法2：使用importlib直接导入整个src包
+                    import importlib.util
+                    
+                    # 先导入src包的__init__.py
+                    src_init_path = os.path.join(self.etf_factor_dir, 'src', '__init__.py')
+                    spec = importlib.util.spec_from_file_location("src", src_init_path)
+                    src_module = importlib.util.module_from_spec(spec)
+                    sys.modules['src'] = src_module
+                    spec.loader.exec_module(src_module)
+                    
+                    # 再导入engine模块
+                    engine_path = os.path.join(self.etf_factor_dir, 'src', 'engine.py')
+                    spec = importlib.util.spec_from_file_location("src.engine", engine_path)
+                    engine_module = importlib.util.module_from_spec(spec)
+                    sys.modules['src.engine'] = engine_module
+                    spec.loader.exec_module(engine_module)
+                    
+                    VectorizedEngine = engine_module.VectorizedEngine
+                    print("✅ 使用importlib包导入成功")
+                    
+                except Exception as e2:
+                    print(f"❌ importlib包导入也失败: {e2}")
+                    # 方法3：最后的fallback，修改工作目录
+                    original_cwd = os.getcwd()
+                    try:
+                        os.chdir(self.etf_factor_dir)
+                        from src.engine import VectorizedEngine
+                        print("✅ 通过修改工作目录导入成功")
+                    finally:
+                        os.chdir(original_cwd)
+            
+            # 创建引擎并计算因子
+            data_dir = os.path.join(self.data_collection_dir, "data", etf_code.replace(".SH", "").replace(".SZ", ""))
+            engine = VectorizedEngine(data_dir=data_dir, output_dir=os.path.join(self.etf_factor_dir, "factor_data"))
+            
+            print(f"📂 数据目录: {data_dir}")
+            print(f"📈 注册因子: {len(engine.factors)} 个")
+            
+            # 计算所有因子
+            results = engine.calculate_all_factors(use_cache=False)
+            success = len(results) > 0
+            
+            if success and results:
+                # 保存因子结果
+                saved_files = engine.save_factor_results(results, output_type='single')
+                print(f"💾 保存了 {len(saved_files)} 个因子文件")
+            
+            print(f"✅ 因子计算完成: {len(results)} 个因子")
             
             if success:
                 # 构造成功的subprocess结果
@@ -179,19 +244,27 @@ class FactorCalculator:
         }
         
         try:
-            factor_data_dir = os.path.join(self.etf_factor_dir, "factor_data/single_factors")
+            # 使用按ETF代码分组的目录结构：factor_data/510300/
+            etf_code_clean = etf_code.replace(".SH", "").replace(".SZ", "")
+            factor_data_dir = os.path.join(self.etf_factor_dir, "factor_data", etf_code_clean)
             if not os.path.exists(factor_data_dir):
                 return summary
                 
-            etf_code_suffix = etf_code.replace('.', '_')
-            for file in os.listdir(factor_data_dir):
-                if file.endswith(f"_{etf_code_suffix}.csv"):
-                    summary["factor_files"] += 1
-                    factor_name = file.replace(f"_{etf_code_suffix}.csv", "")
-                    summary["available_factors"].append(factor_name)
+            # 统计CSV因子文件
+            factor_files = [f for f in os.listdir(factor_data_dir) if f.endswith('.csv')]
+            summary["factor_files"] = len(factor_files)
+            summary["available_factors"] = [f.replace('.csv', '') for f in factor_files]
             
-            # 获取最新日期
-            summary["latest_date"] = self.get_factor_latest_date(etf_code)
+            # 获取最新日期（从任意一个因子文件中）
+            if factor_files:
+                try:
+                    import pandas as pd
+                    first_file = os.path.join(factor_data_dir, factor_files[0])
+                    df = pd.read_csv(first_file)
+                    if 'trade_date' in df.columns and len(df) > 0:
+                        summary["latest_date"] = df['trade_date'].astype(str).max()
+                except:
+                    pass
             
         except Exception as e:
             print(f"❌ 获取因子摘要失败: {e}")

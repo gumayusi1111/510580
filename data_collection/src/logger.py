@@ -9,6 +9,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 import json
+from .smart_report_generator import SmartReportGenerator
 
 
 class ETFLogger:
@@ -361,6 +362,31 @@ class ETFLogger:
         
         summary["total_size_mb"] = round(summary["total_size_mb"], 2)
         return summary
+    
+    def generate_smart_report(self) -> str:
+        """生成智能分析报告并清理旧日志"""
+        try:
+            generator = SmartReportGenerator(self.logs_dir)
+            return generator.generate_report()
+        except Exception as e:
+            print(f"❌ 生成智能报告失败: {e}")
+            # 创建简单的错误报告
+            error_report = f"""
+=================================================================
+🚀 ETF数据管理系统 - 每日运行报告 (错误版本)
+=================================================================
+📅 日期: {datetime.now().strftime('%Y-%m-%d')}
+❌ 状态: 报告生成失败: {e}
+📝 报告生成时间: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+=================================================================
+"""
+            try:
+                report_file = os.path.join(self.logs_dir, "report.txt")
+                with open(report_file, 'w', encoding='utf-8') as f:
+                    f.write(error_report)
+            except:
+                pass
+            return error_report
 
 
 # 全局日志管理器实例

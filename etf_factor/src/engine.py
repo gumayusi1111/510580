@@ -36,8 +36,13 @@ class VectorizedEngine:
         
     def _discover_factors(self):
         """自动发现factors目录下的因子"""
-        factors_dir = "factors"
+        # 获取当前文件所在的目录，然后找到factors目录
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        etf_factor_root = os.path.dirname(current_dir)  # 上级目录是etf_factor
+        factors_dir = os.path.join(etf_factor_root, "factors")
+        
         if not os.path.exists(factors_dir):
+            print(f"⚠️  因子目录不存在: {factors_dir}")
             return
             
         for file in os.listdir(factors_dir):
@@ -45,6 +50,10 @@ class VectorizedEngine:
                 module_name = file[:-3]  # 去掉.py扩展名
                 try:
                     # 动态导入因子模块
+                    # 添加etf_factor根目录到sys.path以支持factors导入
+                    import sys
+                    if etf_factor_root not in sys.path:
+                        sys.path.insert(0, etf_factor_root)
                     module = importlib.import_module(f"factors.{module_name}")
                     
                     # 查找BaseFactor的子类

@@ -103,8 +103,8 @@ class ETFOperations:
             
             # 确认删除
             delete_msg = "所有数据和对应的因子" if factor_info['exists'] else "所有数据"
-            confirm = input(f"\n确认删除 ETF {etf_code} 的{delete_msg}? (输入 'DELETE' 确认): ")
-            if confirm != 'DELETE':
+            confirm = input(f"\n确认删除 ETF {etf_code} 的{delete_msg}? (输入 'DELETE' 或 'delete' 确认): ")
+            if confirm.upper() != 'DELETE':
                 return False, "用户取消删除操作"
             
             # 删除ETF数据
