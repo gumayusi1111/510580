@@ -35,40 +35,72 @@ class VectorizedEngine:
         self._discover_factors()
         
     def _discover_factors(self):
-        """自动发现factors目录下的因子"""
+        """自动发现factors目录下的因子(支持文件和文件夹结构)"""
         # 获取当前文件所在的目录，然后找到factors目录
         current_dir = os.path.dirname(os.path.abspath(__file__))
         etf_factor_root = os.path.dirname(current_dir)  # 上级目录是etf_factor
         factors_dir = os.path.join(etf_factor_root, "factors")
-        
+
         if not os.path.exists(factors_dir):
             print(f"⚠️  因子目录不存在: {factors_dir}")
             return
-            
-        for file in os.listdir(factors_dir):
-            if file.endswith('.py') and not file.startswith('__'):
-                module_name = file[:-3]  # 去掉.py扩展名
+
+        # 添加etf_factor根目录到sys.path以支持factors导入
+        import sys
+        if etf_factor_root not in sys.path:
+            sys.path.insert(0, etf_factor_root)
+
+        for item in os.listdir(factors_dir):
+            item_path = os.path.join(factors_dir, item)
+            module_name = None
+
+            # 处理.py文件 (原有的单文件因子)
+            if item.endswith('.py') and not item.startswith('__'):
+                module_name = item[:-3]  # 去掉.py扩展名
+
+            # 处理文件夹 (新的模块化因子)
+            elif os.path.isdir(item_path) and not item.startswith('__'):
+                init_file = os.path.join(item_path, '__init__.py')
+                if os.path.exists(init_file):
+                    module_name = item
+
+            if module_name:
                 try:
-                    # 动态导入因子模块
-                    # 添加etf_factor根目录到sys.path以支持factors导入
-                    import sys
-                    if etf_factor_root not in sys.path:
-                        sys.path.insert(0, etf_factor_root)
-                    module = importlib.import_module(f"factors.{module_name}")
-                    
+                    # 处理相对导入问题，确保每个模块在独立的命名空间中加载
+                    # 对于文件夹结构的因子，需要特殊处理导入路径
+                    if os.path.isdir(os.path.join(factors_dir, module_name)):
+                        # 文件夹结构的模块化因子
+                        # 临时添加特定模块路径到sys.path
+                        module_path = os.path.join(factors_dir, module_name)
+                        if module_path not in sys.path:
+                            sys.path.insert(0, module_path)
+                        try:
+                            # 导入该模块的__init__.py
+                            module = importlib.import_module(f"factors.{module_name}")
+                            # 移除临时路径以避免污染
+                            if module_path in sys.path:
+                                sys.path.remove(module_path)
+                        except:
+                            if module_path in sys.path:
+                                sys.path.remove(module_path)
+                            raise
+                    else:
+                        # 单文件因子
+                        module = importlib.import_module(f"factors.{module_name}")
+
                     # 查找BaseFactor的子类
                     for attr_name in dir(module):
                         attr = getattr(module, attr_name)
-                        if (isinstance(attr, type) and 
-                            issubclass(attr, BaseFactor) and 
+                        if (isinstance(attr, type) and
+                            issubclass(attr, BaseFactor) and
                             attr != BaseFactor):
                             # 注册因子
                             factor_name = attr.__name__
                             self.factors[factor_name] = attr
-                            
+
                 except Exception as e:
                     print(f"⚠️  加载因子失败 {module_name}: {e}")
-                    
+
         print(f"🔍 发现 {len(self.factors)} 个因子: {list(self.factors.keys())}")
     
     def register_factor(self, factor_class: type):

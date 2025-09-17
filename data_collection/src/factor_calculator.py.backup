@@ -116,23 +116,56 @@ class FactorCalculator:
             # 直接使用etf_factor引擎
             print("📈 执行因子计算...")
             
-            # 使用简化的导入逻辑
+            # 添加etf_factor路径到sys.path
+            if self.etf_factor_dir not in sys.path:
+                sys.path.insert(0, self.etf_factor_dir)
+            
+            # 使用importlib强制导入，避免缓存问题
+            import importlib
+            import importlib.util
+            
+            # 清除可能的模块缓存
+            engine_module_name = 'src.engine'
+            if engine_module_name in sys.modules:
+                del sys.modules[engine_module_name]
+            
             try:
-                # 确保etf_factor路径在sys.path和PYTHONPATH中
-                if str(self.etf_factor_dir) not in sys.path:
-                    sys.path.insert(0, str(self.etf_factor_dir))
-
-                # 设置环境变量
-                os.environ['PYTHONPATH'] = str(self.etf_factor_dir)
-
+                # 方法1：尝试正常导入
                 from src.engine import VectorizedEngine
-                print("✅ 导入VectorizedEngine成功")
-
+                print("✅ 使用正常导入成功")
             except ImportError as e:
-                print(f"❌ 导入失败: {e}")
-                print(f"💡 etf_factor目录: {self.etf_factor_dir}")
-                print(f"💡 sys.path: {sys.path[:3]}")  # 显示前3个路径
-                raise
+                print(f"⚠️  正常导入失败: {e}")
+                try:
+                    # 方法2：使用importlib直接导入整个src包
+                    import importlib.util
+                    
+                    # 先导入src包的__init__.py
+                    src_init_path = os.path.join(self.etf_factor_dir, 'src', '__init__.py')
+                    spec = importlib.util.spec_from_file_location("src", src_init_path)
+                    src_module = importlib.util.module_from_spec(spec)
+                    sys.modules['src'] = src_module
+                    spec.loader.exec_module(src_module)
+                    
+                    # 再导入engine模块
+                    engine_path = os.path.join(self.etf_factor_dir, 'src', 'engine.py')
+                    spec = importlib.util.spec_from_file_location("src.engine", engine_path)
+                    engine_module = importlib.util.module_from_spec(spec)
+                    sys.modules['src.engine'] = engine_module
+                    spec.loader.exec_module(engine_module)
+                    
+                    VectorizedEngine = engine_module.VectorizedEngine
+                    print("✅ 使用importlib包导入成功")
+                    
+                except Exception as e2:
+                    print(f"❌ importlib包导入也失败: {e2}")
+                    # 方法3：最后的fallback，修改工作目录
+                    original_cwd = os.getcwd()
+                    try:
+                        os.chdir(self.etf_factor_dir)
+                        from src.engine import VectorizedEngine
+                        print("✅ 通过修改工作目录导入成功")
+                    finally:
+                        os.chdir(original_cwd)
             
             # 创建引擎并计算因子
             data_dir = os.path.join(self.data_collection_dir, "data", etf_code.replace(".SH", "").replace(".SZ", ""))
@@ -152,8 +185,22 @@ class FactorCalculator:
             
             print(f"✅ 因子计算完成: {len(results)} 个因子")
             
-            # 直接返回计算结果
-            return success
+            if success:
+                # 构造成功的subprocess结果
+                class MockResult:
+                    def __init__(self):
+                        self.returncode = 0
+                        self.stdout = "因子计算成功"
+                        self.stderr = ""
+                result = MockResult()
+            else:
+                class MockResult:
+                    def __init__(self):
+                        self.returncode = 1
+                        self.stdout = ""
+                        self.stderr = "因子计算失败"
+                result = MockResult()
+            
             # 恢复原工作目录
             os.chdir(original_cwd)
             

@@ -1,0 +1,28 @@
+# ETF因子系统集成配置
+data_source:
+  # 数据目录的相对路径(从etf_factor目录开始)
+  base_dir: "../data_collection/data"
+
+  # 支持的数据文件格式
+  file_templates:
+    basic: "basic_data.csv"
+    raw: "raw_data.csv"
+    hfq: "hfq_data.csv"
+    qfq: "qfq_data.csv"
+
+output:
+  # 因子数据输出目录
+  base_dir: "factor_data"
+
+  # 按ETF代码分组的目录结构
+  etf_grouped: true
+
+cache:
+  # 缓存配置
+  enabled: true
+  base_dir: "factor_data/cache"
+
+logging:
+  # 日志配置
+  level: "INFO"
+  file: "logs/factor_calculation.log"
