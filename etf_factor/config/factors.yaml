@@ -83,9 +83,6 @@ volume_price:
   WR:
     period: 14
     data_type: "hfq"
-  MFI:
-    period: 14
-    data_type: "hfq"
 
 # 收益风险类
 return_risk:
