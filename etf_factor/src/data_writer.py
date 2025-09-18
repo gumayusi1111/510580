@@ -111,11 +111,16 @@ class DataWriter:
             保存的文件路径
         """
         filename = f"all_factors_{self.symbol}.csv"
-        file_path = os.path.join(self.output_dir, "complete", filename)
-        
+        complete_dir = os.path.join(self.output_dir, "complete")
+
+        # 确保目录存在
+        os.makedirs(complete_dir, exist_ok=True)
+
+        file_path = os.path.join(complete_dir, filename)
+
         # 整理数据格式
         output_data = self._format_output_data(all_factors_data)
-        
+
         # 保存文件
         output_data.to_csv(file_path, index=False)
         
