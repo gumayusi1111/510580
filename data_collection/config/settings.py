@@ -6,7 +6,7 @@
 from datetime import datetime, timedelta
 
 # Tushare配置
-TUSHARE_TOKEN = "e4b605996baa264ce994a498bea4d0912765aa6057b1c465eed91f92"
+TUSHARE_TOKEN = "a44b1b3296e72fa73c18a1d739a6b5c7a6425351601bce03e34533b0"
 
 # ETF配置
 DEFAULT_ETF_CODE = "510580.SH"  # 中证500ETF易方达

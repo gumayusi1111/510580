@@ -116,22 +116,82 @@ class FactorCalculator:
             # 直接使用etf_factor引擎
             print("📈 执行因子计算...")
             
-            # 使用简化的导入逻辑
+            # 健壮的导入逻辑
             try:
-                # 确保etf_factor路径在sys.path和PYTHONPATH中
+                # 确保etf_factor路径在sys.path中
                 if str(self.etf_factor_dir) not in sys.path:
                     sys.path.insert(0, str(self.etf_factor_dir))
 
-                # 设置环境变量
-                os.environ['PYTHONPATH'] = str(self.etf_factor_dir)
+                # 确保src路径也在sys.path中
+                src_path = os.path.join(self.etf_factor_dir, "src")
+                if str(src_path) not in sys.path:
+                    sys.path.insert(0, str(src_path))
 
-                from src.engine import VectorizedEngine
-                print("✅ 导入VectorizedEngine成功")
+                # 设置环境变量
+                os.environ['PYTHONPATH'] = f"{self.etf_factor_dir}:{src_path}"
+
+                # 清理名称冲突的模块
+                modules_to_remove = []
+                for module_name in list(sys.modules.keys()):
+                    if module_name.startswith('config') and 'data_collection' in str(sys.modules.get(module_name, '')):
+                        modules_to_remove.append(module_name)
+
+                for module_name in modules_to_remove:
+                    del sys.modules[module_name]
+
+                # 尝试导入VectorizedEngine
+                try:
+                    # 保存当前工作目录
+                    original_cwd = os.getcwd()
+
+                    # 临时切换到etf_factor目录进行导入
+                    os.chdir(self.etf_factor_dir)
+
+                    # 确保etf_factor目录在sys.path的第一位
+                    if self.etf_factor_dir in sys.path:
+                        sys.path.remove(self.etf_factor_dir)
+                    sys.path.insert(0, self.etf_factor_dir)
+
+                    # 预先加载关键模块到sys.modules，让因子能找到它们
+                    base_factor_path = os.path.join(self.etf_factor_dir, 'src', 'base_factor.py')
+                    config_path = os.path.join(self.etf_factor_dir, 'src', 'config.py')
+
+                    import importlib.util
+
+                    # 加载base_factor模块
+                    spec = importlib.util.spec_from_file_location("src.base_factor", base_factor_path)
+                    base_factor_module = importlib.util.module_from_spec(spec)
+                    sys.modules['src.base_factor'] = base_factor_module
+                    spec.loader.exec_module(base_factor_module)
+
+                    # 加载config模块
+                    spec = importlib.util.spec_from_file_location("src.config", config_path)
+                    config_module = importlib.util.module_from_spec(spec)
+                    sys.modules['src.config'] = config_module
+                    spec.loader.exec_module(config_module)
+
+                    # 直接导入已经加载的模块
+                    import importlib.util
+                    engine_path = os.path.join(self.etf_factor_dir, 'src', 'engine.py')
+                    spec = importlib.util.spec_from_file_location("engine", engine_path)
+                    engine_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(engine_module)
+                    VectorizedEngine = engine_module.VectorizedEngine
+                    print("✅ 导入VectorizedEngine成功")
+
+                except ImportError as e:
+                    error_msg = f"导入VectorizedEngine失败: {e}"
+                    raise ImportError(error_msg)
+                finally:
+                    # 无论成功与否，都要恢复工作目录
+                    if 'original_cwd' in locals():
+                        os.chdir(original_cwd)
 
             except ImportError as e:
                 print(f"❌ 导入失败: {e}")
                 print(f"💡 etf_factor目录: {self.etf_factor_dir}")
-                print(f"💡 sys.path: {sys.path[:3]}")  # 显示前3个路径
+                print(f"💡 src目录: {os.path.join(self.etf_factor_dir, 'src')}")
+                print(f"💡 sys.path前5个: {sys.path[:5]}")
                 raise
             
             # 创建引擎并计算因子
@@ -152,28 +212,12 @@ class FactorCalculator:
             
             print(f"✅ 因子计算完成: {len(results)} 个因子")
             
-            # 直接返回计算结果
+            # 返回计算结果
             return success
-            # 恢复原工作目录
-            os.chdir(original_cwd)
-            
-            if result.returncode == 0:
-                print("✅ 因子计算完成")
-                print(result.stdout)
-                return True
-            else:
-                print("❌ 因子计算失败")
-                print(f"错误输出: {result.stderr}")
-                if result.stdout:
-                    print(f"标准输出: {result.stdout}")
-                return False
-                
-        except subprocess.TimeoutExpired:
-            print("❌ 因子计算超时")
-            os.chdir(original_cwd)
-            return False
+
         except Exception as e:
             print(f"❌ 因子计算出错: {e}")
+            # 恢复原工作目录
             os.chdir(original_cwd)
             return False
     

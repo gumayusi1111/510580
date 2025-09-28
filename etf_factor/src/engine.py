@@ -5,13 +5,28 @@ VectorizedEngine - 向量化因子计算引擎
 """
 
 import os
+import sys
 import importlib
 from typing import List, Dict, Optional, Union
 import pandas as pd
-from .data_loader import DataLoader
-from .data_writer import DataWriter
-from .cache import CacheManager
-from .base_factor import BaseFactor
+
+# 动态导入解决相对导入问题
+try:
+    # 首先尝试相对导入（在src内部调用时）
+    from .data_loader import DataLoader
+    from .data_writer import DataWriter
+    from .cache import CacheManager
+    from .base_factor import BaseFactor
+except ImportError:
+    # 相对导入失败时，使用绝对导入（外部调用时）
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    if current_dir not in sys.path:
+        sys.path.insert(0, current_dir)
+
+    from data_loader import DataLoader
+    from data_writer import DataWriter
+    from cache import CacheManager
+    from base_factor import BaseFactor
 
 
 class VectorizedEngine:

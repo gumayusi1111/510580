@@ -6,7 +6,7 @@ ETF操作模块 - 负责高级ETF操作
 
 import os
 import shutil
-from .logger import get_etf_logger
+# 日志系统通过ETFManager传递，无需直接导入
 
 
 class ETFOperations:
@@ -19,7 +19,8 @@ class ETFOperations:
         self.processor = data_processor
         # 如果updater支持因子计算，获取因子计算器
         self.factor_calculator = getattr(updater, 'factor_calculator', None)
-        self.logger = get_etf_logger()
+        # 日志器将通过ETFManager传递
+        self.logger = None
     
     def update_all_existing(self):
         """更新所有现有ETF"""
@@ -75,10 +76,9 @@ class ETFOperations:
     
     def delete_etf(self, etf_code):
         """删除ETF及其所有数据（包括对应的因子数据）"""
-        self.logger.log_operation("DELETE_ETF_START", etf_code, "开始删除流程")
-        
         if not self.discovery.etf_exists(etf_code):
-            self.logger.log_operation("DELETE_ETF_FAILED", etf_code, "ETF不存在")
+            if self.logger:
+                self.logger.error("DELETE_ETF", f"ETF {etf_code} 不存在")
             return False, f"ETF {etf_code} 不存在"
         
         code_only = self.discovery._extract_code(etf_code)

@@ -1,0 +1,28 @@
+# ETF日志系统配置
+# 模块化、高内聚低耦合的配置管理
+
+output:
+  directory: "output"           # 相对于logs目录
+  files:
+    current: "current.log"      # 当前运行详细日志
+    summary: "summary.log"      # 运行汇总日志
+    errors: "errors.log"        # 错误专用日志
+  clear_on_start: true          # 启动时清空日志
+
+formatting:
+  timestamp: "%H:%M:%S"         # 时间格式
+  current_template: "[{time}] {level} {module} | {message}"
+  summary_template: "{message}"
+  error_template: "[{time}] ERROR {module} | {message}"
+
+levels:
+  - "STARTUP"      # 系统启动
+  - "UPDATE"       # ETF数据更新
+  - "FACTOR"       # 因子计算
+  - "ERROR"        # 错误事件
+  - "SHUTDOWN"     # 系统关闭
+
+modules:
+  - "SYSTEM"       # 系统级操作
+  - "ETF"          # ETF相关操作
+  - "CALC"         # 计算相关操作

@@ -5,10 +5,20 @@ DataWriter - 数据输出管理器
 """
 
 import os
+import sys
 import pandas as pd
 from datetime import datetime
 from typing import Optional, List, Dict
-from .config import config
+
+# 动态导入解决相对导入问题
+try:
+    from .config import config
+except ImportError:
+    # 添加当前目录到sys.path
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    if current_dir not in sys.path:
+        sys.path.insert(0, current_dir)
+    from config import config
 
 
 class DataWriter:
