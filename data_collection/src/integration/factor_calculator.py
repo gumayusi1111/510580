@@ -6,9 +6,10 @@
 
 import os
 import sys
-import subprocess
+import importlib.util
+import shutil
 import pandas as pd
-from typing import List, Optional
+from typing import Optional
 
 
 class FactorCalculator:
@@ -91,7 +92,7 @@ class FactorCalculator:
         
         return latest_data_date > latest_factor_date
     
-    def calculate_factors(self, etf_code: str, incremental: bool = True) -> bool:
+    def calculate_factors(self, etf_code: str, _incremental: bool = True) -> bool:
         """计算因子数据"""
         if not self.should_calculate_factors(etf_code):
             return False
@@ -156,8 +157,6 @@ class FactorCalculator:
                     base_factor_path = os.path.join(self.etf_factor_dir, 'src', 'base_factor.py')
                     config_path = os.path.join(self.etf_factor_dir, 'src', 'config.py')
 
-                    import importlib.util
-
                     # 加载base_factor模块
                     spec = importlib.util.spec_from_file_location("src.base_factor", base_factor_path)
                     base_factor_module = importlib.util.module_from_spec(spec)
@@ -171,7 +170,6 @@ class FactorCalculator:
                     spec.loader.exec_module(config_module)
 
                     # 直接导入已经加载的模块
-                    import importlib.util
                     engine_path = os.path.join(self.etf_factor_dir, 'src', 'engine.py')
                     spec = importlib.util.spec_from_file_location("engine", engine_path)
                     engine_module = importlib.util.module_from_spec(spec)
@@ -221,7 +219,7 @@ class FactorCalculator:
             os.chdir(original_cwd)
             return False
     
-    def _update_factor_config(self, etf_code: str):
+    def _update_factor_config(self, _etf_code: str):
         """更新因子计算配置"""
         try:
             config_file = os.path.join(self.etf_factor_dir, "config/data.yaml")
@@ -256,12 +254,11 @@ class FactorCalculator:
             # 获取最新日期（从任意一个因子文件中）
             if factor_files:
                 try:
-                    import pandas as pd
                     first_file = os.path.join(factor_data_dir, factor_files[0])
                     df = pd.read_csv(first_file)
                     if 'trade_date' in df.columns and len(df) > 0:
                         summary["latest_date"] = df['trade_date'].astype(str).max()
-                except:
+                except Exception:
                     pass
             
         except Exception as e:
@@ -284,7 +281,6 @@ class FactorCalculator:
                 file_count = len(factor_files)
                 
                 # 删除整个ETF因子目录
-                import shutil
                 shutil.rmtree(etf_factor_dir)
                 print(f"✅ 已删除 {file_count} 个因子文件: {etf_factor_dir}")
                 return True

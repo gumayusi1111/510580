@@ -4,9 +4,13 @@ Tushare API客户端模块
 """
 
 import sys
+import os
 import time
 import traceback
 import tushare as ts  # cspell:ignore tushare
+
+# 添加配置路径
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from config.settings import MAX_RETRY_TIMES, REQUEST_DELAY
 
 

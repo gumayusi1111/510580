@@ -4,7 +4,11 @@
 """
 
 import os
+import sys
 import pandas as pd
+
+# 添加配置路径
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from config.settings import (
     BASIC_COLUMNS, RAW_COLUMNS, HFQ_COLUMNS, QFQ_COLUMNS,
     FILE_TEMPLATES, DATA_DIR_NAME
@@ -16,7 +20,8 @@ class DataProcessor:
     
     def __init__(self, base_dir=None):
         """初始化处理器"""
-        self.base_dir = base_dir or os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        # 修复路径：从 data_collection/src/core/data_processor.py 到 data_collection/
+        self.base_dir = base_dir or os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         self.data_dir = os.path.join(self.base_dir, DATA_DIR_NAME)
         os.makedirs(self.data_dir, exist_ok=True)
     

@@ -5,24 +5,31 @@ ETF更新模块 - 负责ETF数据的增量和全量更新
 """
 
 import os
+import sys
 import time
 import pandas as pd
 from datetime import datetime, timedelta
+
+# 添加配置路径
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from config.settings import get_default_date_range, DATE_FORMAT, FILE_TEMPLATES
 from config.settings import BASIC_COLUMNS, RAW_COLUMNS, HFQ_COLUMNS, QFQ_COLUMNS
-from .factor_calculator import FactorCalculator
+from ..integration.factor_calculator import FactorCalculator
+from ..fundamental.fundamental_data_manager import FundamentalDataManager
 # 日志系统通过ETFManager传递，无需直接导入
 
 
 class ETFUpdater:
     """ETF更新器 - 单一职责：处理数据更新"""
     
-    def __init__(self, api_client, data_processor, auto_calculate_factors=True):
+    def __init__(self, api_client, data_processor, auto_calculate_factors=True, auto_fundamental_data=True):
         """初始化更新器"""
         self.client = api_client
         self.processor = data_processor
         self.auto_calculate_factors = auto_calculate_factors
+        self.auto_fundamental_data = auto_fundamental_data
         self.factor_calculator = FactorCalculator() if auto_calculate_factors else None
+        self.fundamental_manager = FundamentalDataManager(api_client) if auto_fundamental_data else None
         # 获取智能日志器（从ETFManager传递）
         self.logger = None
         # 操作计时器
@@ -114,12 +121,25 @@ class ETFUpdater:
         # 合并保存数据
         self._merge_and_save(new_data, etf_code)
         
+        # 自动获取基本面数据
+        fundamental_message = ""
+        if self.auto_fundamental_data and self.fundamental_manager:
+            print("\n" + "="*50)
+            print("📊 自动获取基本面数据")
+            print("="*50)
+
+            fundamental_success = self.fundamental_manager.get_etf_fundamental_data(etf_code, incremental=True)
+            if fundamental_success:
+                fundamental_message = " + 基本面数据更新完成"
+            else:
+                fundamental_message = " (基本面数据更新失败)"
+
         # 自动计算因子
         if self.auto_calculate_factors and self.factor_calculator:
             print("\n" + "="*50)
             print("🧮 自动计算技术因子")
             print("="*50)
-            
+
             factor_start_time = datetime.now()
             factor_success = self.factor_calculator.calculate_factors(etf_code, incremental=True)
             factor_duration = (datetime.now() - factor_start_time).total_seconds()
@@ -138,15 +158,15 @@ class ETFUpdater:
                     # 这里需要获取实际的因子数量，暂时用26作为默认值
                     self.logger.factor_calculation(etf_code, success=True, factors=26, duration=factor_duration)
 
-                return True, f"增量更新成功: {message} + 因子计算完成"
+                return True, f"增量更新成功: {message}{fundamental_message} + 因子计算完成"
             else:
                 # 因子计算失败时的日志记录
                 if self.logger:
                     self.logger.factor_calculation(etf_code, success=False, error_msg="因子计算失败")
-                return True, f"增量更新成功: {message} (因子计算失败)"
+                return True, f"增量更新成功: {message}{fundamental_message} (因子计算失败)"
         
         # 更新完成，无需额外日志（已在上面记录）
-        return True, f"增量更新成功: {message}"
+        return True, f"增量更新成功: {message}{fundamental_message}"
     
     def update_etf_full(self, etf_code):
         """全量更新ETF数据"""
@@ -159,7 +179,20 @@ class ETFUpdater:
         
         # 直接保存新数据（覆盖旧数据）
         self.processor.save_separate_files(new_data, etf_code)
-        
+
+        # 自动获取基本面数据（全量）
+        fundamental_message = ""
+        if self.auto_fundamental_data and self.fundamental_manager:
+            print("\n" + "="*50)
+            print("📊 全量获取基本面数据")
+            print("="*50)
+
+            fundamental_success = self.fundamental_manager.get_etf_fundamental_data(etf_code, incremental=False)
+            if fundamental_success:
+                fundamental_message = " + 基本面数据获取完成"
+            else:
+                fundamental_message = " (基本面数据获取失败)"
+
         # 自动计算因子（全量）
         if self.auto_calculate_factors and self.factor_calculator:
             print("\n" + "="*50)
@@ -176,11 +209,11 @@ class ETFUpdater:
                 print(f"   最新日期: {summary['latest_date']}")
                 print(f"   可用因子: {len(summary['available_factors'])} 个")
                 
-                return True, f"全量更新成功: {message} + 因子计算完成"
+                return True, f"全量更新成功: {message}{fundamental_message} + 因子计算完成"
             else:
-                return True, f"全量更新成功: {message} (因子计算失败)"
-        
-        return True, f"全量更新成功: {message}"
+                return True, f"全量更新成功: {message}{fundamental_message} (因子计算失败)"
+
+        return True, f"全量更新成功: {message}{fundamental_message}"
     
     def _merge_and_save(self, new_data, etf_code):
         """合并新数据与现有数据并保存"""

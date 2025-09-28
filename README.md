@@ -1,7 +1,7 @@
-# ETF因子库项目 - 510580.SH
+# ETF量化交易系统
 
 ## 📈 项目简介
-基于 **510580.SH（中证500ETF易方达）** 的向量化因子计算库，专注于高性能量化因子计算与分析。
+多ETF量化交易系统，支持自动化数据采集、技术因子计算、基本面分析和量化策略开发。
 
 ## 🏗️ 项目架构
 
@@ -9,30 +9,40 @@
 - **🚀 向量化计算** - 基于NumPy/Pandas，性能提升10-100倍
 - **💾 智能缓存** - 内存+磁盘缓存，支持增量更新
 - **⚙️ 全局配置** - 统一精度、格式、验证规则
-- **📊 26个因子** - 涵盖5大类技术指标
+- **📊 26+技术因子** - 涵盖5大类技术指标
+- **💼 基本面数据** - ETF净值、份额、指数估值
+- **🌍 宏观数据** - 利率、经济指标
 - **🔧 可扩展架构** - 模块化因子，轻松添加新指标
+- **📈 多ETF支持** - 510300.SH、510580.SH、513180.SH
+- **🔄 自动更新** - 一键更新所有数据类型
 
 ### 目录结构
 ```
 singleetfs/
-├── data_collection/          # 数据采集系统
-│   ├── src/                  # 核心采集模块
-│   │   ├── api_client.py     # API客户端
-│   │   ├── etf_operations.py # ETF操作管理
-│   │   ├── data_processor.py # 数据处理器
-│   │   ├── etf_discovery.py  # ETF发现服务
-│   │   ├── etf_updater.py    # ETF数据更新
-│   │   ├── factor_calculator.py # 因子计算器
-│   │   ├── interactive_menu.py   # 交互式菜单
-│   │   ├── smart_report_generator.py # 智能报告生成
-│   │   ├── logger.py         # 日志管理
-│   │   └── token_manager.py  # Token管理
+├── data_collection/          # 数据采集系统 ✅
+│   ├── src/                  # 核心采集模块（模块化重构）
+│   │   ├── api/              # API管理模块
+│   │   │   ├── api_client.py     # Tushare API客户端
+│   │   │   └── token_manager.py  # Token管理器
+│   │   ├── core/             # 核心业务模块
+│   │   │   ├── data_processor.py # 数据处理器
+│   │   │   ├── etf_updater.py    # ETF数据更新器
+│   │   │   └── etf_operations.py # ETF操作管理器
+│   │   ├── fundamental/      # 基本面数据模块
+│   │   │   ├── get_etf_fundamental_data.py # 基本面数据获取
+│   │   │   └── fundamental_data_manager.py # 基本面数据管理
+│   │   ├── integration/      # 集成模块
+│   │   │   ├── etf_discovery.py      # ETF发现服务
+│   │   │   └── factor_calculator.py  # 因子计算集成
+│   │   └── ui/               # 用户界面模块
+│   │       └── interactive_menu.py   # 交互式菜单
 │   ├── config/               # 采集配置
 │   │   ├── settings.py       # 系统设置
 │   │   └── __init__.py
 │   ├── data/                 # 采集数据存储
 │   │   ├── 510300/           # 沪深300ETF数据
-│   │   └── 510580/           # 中证500ETF数据
+│   │   ├── 510580/           # 中证500ETF数据
+│   │   └── 513180/           # 纳指100ETF数据
 │   ├── etf_manager.py        # ETF管理器
 │   └── run.py                # 主运行程序
 ├── etf_factor/               # 因子计算引擎 ✅
@@ -71,11 +81,21 @@ singleetfs/
 │   │   ├── cum_return/       # 累计收益率
 │   │   ├── annual_vol/       # 年化波动率
 │   │   └── max_dd/           # 最大回撤
-│   ├── factor_data/          # 输出目录 ✅
-│   │   ├── 510300/           # 沪深300ETF因子数据
-│   │   ├── 510580/           # 中证500ETF因子数据 (26个因子文件)
-│   │   ├── complete/         # 完整数据集
-│   │   │   └── all_factors_510580.SH.csv  # 全因子合并文件
+│   ├── factor_data/          # 因子数据输出目录 ✅
+│   │   ├── technical/        # 技术因子数据
+│   │   │   ├── 510300/           # 沪深300ETF技术因子
+│   │   │   ├── 510580/           # 中证500ETF技术因子
+│   │   │   ├── 513180/           # 纳指100ETF技术因子
+│   │   │   └── complete/         # 完整技术因子数据集
+│   │   ├── fundamental/      # 基本面数据
+│   │   │   ├── 510300/           # 沪深300ETF基本面
+│   │   │   │   ├── ETF_NAV.csv       # ETF净值数据
+│   │   │   │   ├── ETF_SHARE.csv     # ETF份额数据
+│   │   │   │   └── INDEX_VALUATION.csv # 指数估值数据
+│   │   │   ├── 510580/           # 中证500ETF基本面
+│   │   │   └── 513180/           # 纳指100ETF基本面
+│   │   ├── macro/            # 宏观经济数据
+│   │   │   └── SHIBOR_RATES.csv  # 银行间同业拆放利率
 │   │   └── cache/            # 缓存文件
 │   ├── config/               # 配置文件
 │   │   ├── global.yaml       # 全局配置
@@ -108,13 +128,23 @@ pip install -r requirements.txt
 pip install PyYAML  # 配置文件支持
 ```
 
-### 2. 获取数据
+### 2. 配置Tushare Token
+在 `data_collection/config/settings.py` 中配置你的Tushare Token
+
+### 3. 数据采集和更新
 ```bash
+# 启动数据采集系统（交互式菜单）
 cd data_collection
 python run.py
+
+# 选择菜单选项：
+# 1️⃣ 更新所有ETF到最新 (增量更新) - 自动更新所有数据+计算因子
+# 2️⃣ 添加新的ETF代码
+# 3️⃣ 删除ETF数据
+# 4️⃣ 查看所有ETF状态
 ```
 
-### 3. 使用因子库
+### 4. 使用因子库
 ```python
 from etf_factor.src import VectorizedEngine
 
@@ -130,6 +160,15 @@ results = engine.calculate_batch_factors(factors)
 
 # 保存结果
 engine.save_factor_results(results, output_type="single")
+```
+
+### 5. 手动计算因子（可选）
+```bash
+# 计算指定ETF的所有因子
+python etf_factor/run_factors.py factor_data output 510300.SH
+
+# 计算所有ETF的因子
+python etf_factor/run_factors.py factor_data output
 ```
 
 ## 📊 因子清单
@@ -184,23 +223,37 @@ engine.save_factor_results(results, output_type="single")
 - 成交量范围: 0 - 1e10
 - 百分比范围: -100% - 1000%
 
-## 📈 数据说明
+## 📈 支持的ETF
 
-### ETF基础信息
-- **标的**: 510580.SH (中证500ETF易方达)
-- **数据范围**: 2018-09-10 至 2025-09-05
-- **记录数**: ~1695条交易记录
-- **复权处理**: 后复权用于计算，前复权用于展示
+### 当前支持的ETF
+- **510300.SH** - 沪深300ETF (华泰柏瑞)
+- **510580.SH** - 中证500ETF (易方达)
+- **513180.SH** - 纳指100ETF (国泰)
 
-### 输出文件
+### 数据类型
+1. **基础价格数据** - 开高低收、成交量、复权因子
+2. **技术因子数据** - 26+个技术指标
+3. **基本面数据** - ETF净值、份额、指数估值
+4. **宏观经济数据** - 利率、经济指标
+
+### 数据格式
+- **复权处理**: 后复权用于技术因子计算，前复权用于当前价位分析
+- **日期格式**: YYYYMMDD
+- **精度控制**: 价格6位小数，指标4位小数
+- **数据验证**: 完整的数据范围和格式验证
+
+### 输出文件结构
 ```
 etf_factor/factor_data/
-├── 510580/                  # ETF代码分组
-│   ├── SMA_510580.csv       # SMA因子所有周期
-│   ├── EMA_510580.csv       # EMA因子所有周期
-│   └── ... (其他因子)
-├── single/                  # 单因子文件
-├── complete/                # 完整数据集
+├── technical/               # 技术因子数据
+│   ├── 510300/                  # ETF代码分组
+│   │   ├── SMA.csv                  # SMA因子所有周期
+│   │   ├── EMA.csv                  # EMA因子所有周期
+│   │   └── ... (其他因子)
+│   └── complete/                # 完整技术因子数据集
+├── fundamental/             # 基本面数据
+│   └── {etf_code}/              # 按ETF分组的基本面数据
+├── macro/                   # 宏观经济数据
 └── cache/                   # 缓存文件
 ```
 

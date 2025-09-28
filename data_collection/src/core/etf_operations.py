@@ -19,6 +19,8 @@ class ETFOperations:
         self.processor = data_processor
         # 如果updater支持因子计算，获取因子计算器
         self.factor_calculator = getattr(updater, 'factor_calculator', None)
+        # 如果updater支持基本面数据，获取基本面数据管理器
+        self.fundamental_manager = getattr(updater, 'fundamental_manager', None)
         # 日志器将通过ETFManager传递
         self.logger = None
     
@@ -93,16 +95,34 @@ class ETFOperations:
                 file_size = os.path.getsize(os.path.join(etf_dir, file))
                 print(f"   - {file} ({file_size:,} 字节)")
             
-            # 检查并显示对应的因子数据
+            # 检查并显示对应的因子数据和基本面数据
             factor_info = self._check_factor_data(etf_code)
+            fundamental_info = self._check_fundamental_data(etf_code)
+
             if factor_info['exists']:
-                print(f"\n📈 因子数据文件:")
-                print(f"   - 因子目录: etf_factor/factor_data/{code_only}/")
+                print(f"\n📈 技术因子数据文件:")
+                print(f"   - 因子目录: etf_factor/factor_data/technical/{code_only}/")
                 print(f"   - 因子文件数: {factor_info['file_count']}")
                 print(f"   - 示例因子: {', '.join(factor_info['sample_factors'])}")
+
+            if fundamental_info['exists']:
+                print(f"\n📊 基本面数据文件:")
+                print(f"   - 基本面目录: etf_factor/factor_data/fundamental/{code_only}/")
+                print(f"   - 基本面文件数: {fundamental_info['file_count']}")
+                print(f"   - 可用数据: {', '.join(fundamental_info['available_data'])}")
             
             # 确认删除
-            delete_msg = "所有数据和对应的因子" if factor_info['exists'] else "所有数据"
+            data_types = []
+            if factor_info['exists']:
+                data_types.append("技术因子")
+            if fundamental_info['exists']:
+                data_types.append("基本面数据")
+
+            if data_types:
+                delete_msg = f"所有数据和对应的{'/'.join(data_types)}"
+            else:
+                delete_msg = "所有数据"
+
             confirm = input(f"\n确认删除 ETF {etf_code} 的{delete_msg}? (输入 'DELETE' 或 'delete' 确认): ")
             if confirm.upper() != 'DELETE':
                 return False, "用户取消删除操作"
@@ -111,15 +131,35 @@ class ETFOperations:
             shutil.rmtree(etf_dir)
             print(f"✅ 已删除ETF数据: {etf_dir}")
             
-            # 删除对应的因子数据
+            # 删除对应的因子数据和基本面数据
+            cleanup_results = []
+
             if factor_info['exists'] and self.factor_calculator:
-                success = self.factor_calculator.cleanup_factor_data(etf_code)
-                if success:
-                    print(f"✅ 已删除对应的因子数据")
-                    return True, f"成功删除 ETF {etf_code} 的所有数据和因子"
+                factor_success = self.factor_calculator.cleanup_factor_data(etf_code)
+                if factor_success:
+                    print(f"✅ 已删除对应的技术因子数据")
+                    cleanup_results.append("技术因子清理成功")
                 else:
-                    print(f"⚠️  ETF数据已删除，但因子清理失败")
-                    return True, f"ETF {etf_code} 数据已删除，但因子清理失败"
+                    print(f"⚠️ 技术因子清理失败")
+                    cleanup_results.append("技术因子清理失败")
+
+            if fundamental_info['exists'] and self.fundamental_manager:
+                fundamental_success = self.fundamental_manager.cleanup_fundamental_data(etf_code)
+                if fundamental_success:
+                    print(f"✅ 已删除对应的基本面数据")
+                    cleanup_results.append("基本面数据清理成功")
+                else:
+                    print(f"⚠️ 基本面数据清理失败")
+                    cleanup_results.append("基本面数据清理失败")
+
+            # 生成返回消息
+            if cleanup_results:
+                cleanup_msg = ", ".join(cleanup_results)
+                all_success = all("成功" in result for result in cleanup_results)
+                if all_success:
+                    return True, f"成功删除 ETF {etf_code} 的所有数据和相关因子数据"
+                else:
+                    return True, f"ETF {etf_code} 数据已删除，但部分清理失败: {cleanup_msg}"
             
             return True, f"成功删除 ETF {etf_code} 的所有数据"
             
@@ -140,9 +180,28 @@ class ETFOperations:
                 info['exists'] = summary['factor_files'] > 0
                 info['file_count'] = summary['factor_files']
                 info['sample_factors'] = summary['available_factors'][:3]  # 显示前3个
-        except:
+        except Exception:
             pass  # 忽略错误，可能因子系统不可用
         
+        return info
+
+    def _check_fundamental_data(self, etf_code):
+        """检查ETF对应的基本面数据"""
+        info = {
+            'exists': False,
+            'file_count': 0,
+            'available_data': []
+        }
+
+        try:
+            if self.fundamental_manager:
+                summary = self.fundamental_manager.get_fundamental_summary(etf_code)
+                info['exists'] = summary['fundamental_files'] > 0
+                info['file_count'] = summary['fundamental_files']
+                info['available_data'] = [data['type'] for data in summary['available_data'][:3]]  # 显示前3个
+        except Exception:
+            pass  # 忽略错误，可能基本面系统不可用
+
         return info
     
     def show_all_etf_status(self):

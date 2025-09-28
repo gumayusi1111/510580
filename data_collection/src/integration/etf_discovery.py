@@ -5,7 +5,11 @@ ETF发现模块 - 负责发现和验证ETF代码
 """
 
 import os
+import sys
 import pandas as pd
+
+# 添加配置路径
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 from config.settings import FILE_TEMPLATES
 
 
@@ -69,7 +73,7 @@ class ETFDiscovery:
             df = pd.read_csv(basic_file)
             record_count = len(df)
             date_range = f"{df['trade_date'].min()} ~ {df['trade_date'].max()}"
-        except:
+        except Exception:
             record_count = 0
             date_range = "N/A"
         
