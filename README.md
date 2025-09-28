@@ -20,38 +20,80 @@ singleetfs/
 │   │   ├── api_client.py     # API客户端
 │   │   ├── etf_operations.py # ETF操作管理
 │   │   ├── data_processor.py # 数据处理器
+│   │   ├── etf_discovery.py  # ETF发现服务
+│   │   ├── etf_updater.py    # ETF数据更新
+│   │   ├── factor_calculator.py # 因子计算器
+│   │   ├── interactive_menu.py   # 交互式菜单
+│   │   ├── smart_report_generator.py # 智能报告生成
+│   │   ├── logger.py         # 日志管理
 │   │   └── token_manager.py  # Token管理
 │   ├── config/               # 采集配置
+│   │   ├── settings.py       # 系统设置
+│   │   └── __init__.py
 │   ├── data/                 # 采集数据存储
+│   │   ├── 510300/           # 沪深300ETF数据
+│   │   └── 510580/           # 中证500ETF数据
+│   ├── etf_manager.py        # ETF管理器
 │   └── run.py                # 主运行程序
-├── etf_factor/               # 因子计算引擎
+├── etf_factor/               # 因子计算引擎 ✅
 │   ├── src/                  # 核心框架
 │   │   ├── base_factor.py    # 向量化因子基类
 │   │   ├── engine.py         # 向量化计算引擎
 │   │   ├── data_loader.py    # 数据加载器
 │   │   ├── data_writer.py    # 数据输出器
-│   │   └── cache.py          # 缓存管理器
-│   ├── factors/              # 因子实现 (26个模块)
-│   │   ├── sma/              # 简单移动均线模块
-│   │   ├── ema/              # 指数移动均线模块
-│   │   ├── macd/             # MACD指标模块
-│   │   └── ... (23个更多因子模块)
-│   ├── factor_data/          # 输出目录 (git忽略)
-│   │   ├── single/           # 单因子文件
+│   │   ├── cache.py          # 缓存管理器
+│   │   └── config.py         # 配置管理
+│   ├── factors/              # 因子实现 (26个模块) ✅
+│   │   ├── sma/              # 简单移动均线
+│   │   ├── ema/              # 指数移动均线
+│   │   ├── wma/              # 加权移动均线
+│   │   ├── ma_diff/          # 均线差值
+│   │   ├── ma_slope/         # 均线斜率
+│   │   ├── macd/             # MACD指标
+│   │   ├── rsi/              # RSI指标
+│   │   ├── roc/              # 变动率
+│   │   ├── mom/              # 动量指标
+│   │   ├── tr/               # 真实波幅
+│   │   ├── atr/              # 平均真实波幅
+│   │   ├── atr_pct/          # ATR百分比
+│   │   ├── hv/               # 历史波动率
+│   │   ├── boll/             # 布林带
+│   │   ├── dc/               # 唐奇安通道
+│   │   ├── bb_width/         # 布林带宽度
+│   │   ├── stoch/            # 随机震荡器
+│   │   ├── vma/              # 成交量均线
+│   │   ├── volume_ratio/     # 量比
+│   │   ├── obv/              # 能量潮
+│   │   ├── kdj/              # KDJ指标
+│   │   ├── cci/              # CCI指标
+│   │   ├── wr/               # 威廉指标
+│   │   ├── daily_return/     # 日收益率
+│   │   ├── cum_return/       # 累计收益率
+│   │   ├── annual_vol/       # 年化波动率
+│   │   └── max_dd/           # 最大回撤
+│   ├── factor_data/          # 输出目录 ✅
+│   │   ├── 510300/           # 沪深300ETF因子数据
+│   │   ├── 510580/           # 中证500ETF因子数据 (26个因子文件)
 │   │   ├── complete/         # 完整数据集
+│   │   │   └── all_factors_510580.SH.csv  # 全因子合并文件
 │   │   └── cache/            # 缓存文件
+│   ├── config/               # 配置文件
+│   │   ├── global.yaml       # 全局配置
+│   │   ├── factors.yaml      # 因子配置
+│   │   ├── data.yaml         # 数据配置
+│   │   ├── cache.yaml        # 缓存配置
+│   │   └── integration.yaml  # 集成配置
+│   ├── scripts/              # 执行脚本
+│   │   ├── run_factors.py    # 因子计算脚本
+│   │   └── verify_system.py  # 系统验证脚本
 │   ├── utils/                # 工具函数
-│   ├── tests/                # 单元测试
+│   ├── docs/                 # 文档
 │   └── examples/             # 使用示例
-├── quant_trading/            # 量化分析框架
-│   ├── core/                 # 核心数据管理
-│   ├── analyzers/            # 分析器模块
-│   │   ├── ic/               # IC分析
-│   │   ├── correlation/      # 相关性分析
-│   │   └── layering/         # 分层回测
-│   ├── reports/              # 分析报告
-│   └── config/               # 分析配置
-└── logs/                     # 系统日志
+└── logs/                     # 系统日志 ✅
+    ├── etf_operations/       # ETF操作日志
+    ├── factor_calculations/  # 因子计算日志
+    ├── system/               # 系统日志
+    └── manage_logs.py        # 日志管理
 ```
 
 ## 🚀 快速开始
