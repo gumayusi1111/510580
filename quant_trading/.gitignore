@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# 虚拟环境
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 备份文件
+*.backup
+*.bak
+*.old
+*.tmp
+
+# 测试和覆盖率
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 数据文件
+*.csv
+*.xlsx
+*.parquet
+
+# 日志
+*.log
+logs/
+reports/.logs/
+
+# 缓存
+reports/.cache/
+
+# 报告(历史)
+reports/*/
+
+# 临时
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# 构建
+build/
+dist/
+*.egg-info/
